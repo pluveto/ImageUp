@@ -7,6 +7,7 @@ namespace ImageUpWpf.Core
 {
     public class IuAppContext
     {
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         public AppConfig AppConfig { get; set; }
         public List<IUploader> ChainUploaders { get; private set; }
         public PluginManager PluginManager { get; private set; }
@@ -24,6 +25,7 @@ namespace ImageUpWpf.Core
         {
             PluginManager = new PluginManager();
             PluginManager.LoadPlugins();
+            Inject(PluginManager);
         }
 
         public void LoadConfig()
@@ -31,6 +33,20 @@ namespace ImageUpWpf.Core
             // todo: default config
             var c = Utils.Config.GetConfig<AppConfig>(AppDomain.CurrentDomain.BaseDirectory, "app_config");
             AppConfig = default == c ? AppConfig.Default() : c;
+        }
+
+        public void Inject(PluginManager pm)
+        {
+            foreach (var plugin in pm.Plugins)
+            {
+                var props = plugin.GetType().GetProperties(); 
+                var ctx = props.SingleOrDefault(x => x.PropertyType == typeof(IuAppContext));
+                if (default != ctx)
+                {
+                    ctx.SetValue(plugin, this);
+                    logger.Info($"Inject IuAppContext for {plugin}.{ctx.Name}");
+                }
+            }
         }
 
         public void LoadChainUploaders(List<string> chainUploaders)
