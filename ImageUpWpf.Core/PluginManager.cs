@@ -13,16 +13,24 @@ namespace ImageUpWpf.Core
 {
     public class PluginManager
     {
+        private NLog.Logger logger;
+
         public PluginManager()
         {
-            this.PluginDir = Path.Join(Environment.CurrentDirectory, "plugins");
+            this.logger = NLog.LogManager.GetCurrentClassLogger();
+            this.PluginDir = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "plugins");
         }
         public string PluginDir { get; set; }
 
         public List<IPlugin> Plugins { get; private set; }
+        /// <summary>
+        /// LoadPlugins 加载插件。将会从本地扫描读取 DLL，然后创建插件的实例和配置文件的实例。
+        /// 此函数应在程序启动时调用。
+        /// </summary>
         public void LoadPlugins()
         {
             this.Plugins = new List<IPlugin>();
+            this.Uploaders = new List<IUploader>();
             var pluginAsm = SearchPluginDlls();
             foreach (var a in pluginAsm)
             {
@@ -34,49 +42,26 @@ namespace ImageUpWpf.Core
 
                 Plugins.Add(plugin);
             }
+
+            foreach (var plugin in Plugins)
+            {
+                if (plugin.GetType().GetInterfaces().Contains(typeof(IUploader)))
+                {
+                    logger.Trace("Found uploader: " + plugin.PluginInfo.Name);
+                    Uploaders.Add((IUploader)plugin);
+                }
+            }
         }
 
         public List<PluginInfo> PluginInfos => Plugins.Select(x => x.PluginInfo).ToList();
-        public IUploader GetUploader(string pluginName)
+        /// <summary>
+        /// Uploaders are availables all Uploaders. Filled after LoadPlugins()
+        /// </summary>
+        public List<IUploader> Uploaders { get; internal set; }
+
+        public IUploader GetUploader(string mainClass)
         {
-            var pluginAsm = SearchPluginDlls();
-
-            IUploader uploader = null;
-            try
-            {
-                foreach (var a in pluginAsm)
-                {
-                    //if (!dll.Contains(pluginName))
-                    //{
-                    //    continue;
-                    //}
-                    Type pluginClassType = GetFirstImplOfWithNameContains(a, typeof(IUploader), pluginName);
-                    if (null == pluginClassType)
-                    {
-                        continue;
-                    }
-                    Type pluginConfigType = GetFirstImplOfWithNameContains(a, typeof(IPluginConfig), pluginName);
-
-                    // If no config dependency
-                    if (default == pluginConfigType)
-                    {
-                        uploader = (IUploader)Activator.CreateInstance(pluginClassType);
-                    }
-                    else
-                    {
-                        // IPluginConfig config = LoadConfig(pluginName, pluginConfigType);
-                        // uploader = (IUploader)Activator.CreateInstance(pluginClassType, config);
-                    }
-                    return uploader;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.ToString());
-            }
-            return uploader;
-
-
+            return this.Uploaders.SingleOrDefault(u => u.GetType().Name == mainClass);
         }
 
         private IPluginConfig LoadConfig(string mainClass, Type pluginConfigType)
@@ -86,8 +71,8 @@ namespace ImageUpWpf.Core
                 return null;
             }
             // or create config for it
-            var x = typeof(PluginManager).GetMethod("GetPluginConfig", BindingFlags.Public | BindingFlags.Static);
-            // GetPluginConfig<pluginConfigType>(pluginDir, pluginName);
+            var x = typeof(Utils.Config).GetMethod("GetConfig", BindingFlags.Public | BindingFlags.Static);
+            // GetConfig<pluginConfigType>(pluginDir, pluginName);
             IPluginConfig config = (IPluginConfig)x.MakeGenericMethod(pluginConfigType).Invoke(null, new object[] { PluginDir, mainClass });
             if (config == default)
             {
@@ -122,47 +107,6 @@ namespace ImageUpWpf.Core
             }
             return pluginDlls;
         }
-#pragma warning disable IDE0051 // 此函数已经通过反射调用，调用者 LoadConfig
-        public static T GetPluginConfig<T>(string dir, string pluginName)
-#pragma warning restore IDE0051
-        {
-            var (cfgPath, ext) = TryGetFileWithExtIn(dir, pluginName, new string[] { "yaml", "yml", "json" });
-            if (cfgPath == default)
-            {
-                return default(T);
-            }
-            var sr = File.OpenText(cfgPath);
-            switch (ext)
-            {
-                case "yaml":
-                case "yml":
-                    var deserializer = new DeserializerBuilder()
-                                       .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                                       .Build();
-                    return deserializer.Deserialize<T>(sr);
-                case "json":
-                    return JsonConvert.DeserializeObject<T>(sr.ReadToEnd());
-                default:
-                    break;
-            }
-            return default(T);
-
-        }
-
-        private static (string path, string ext) TryGetFileWithExtIn(string dir, string pluginName, string[] exts)
-        {
-            var p = Path.Join(dir, pluginName.ToLower());
-            foreach (var ext in exts)
-            {
-                var path = p + "." + ext;
-                if (File.Exists(path))
-                {
-                    return (path, ext);
-                }
-            }
-            return (default, default);
-        }
-
         private static Type GetFirstImplOf(Assembly a, Type interfaceType)
         {
             return a.GetExportedTypes().Where(t => t.GetInterfaces().Contains(interfaceType)).FirstOrDefault();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -7,7 +8,7 @@ namespace ImageUpWpf.Core
 {
     public interface IUploader
     {
-        Task<IList<string>> Upload(IList<string> files);
+        Task<string> Upload(Stream sr, string name);
 
     }
 
