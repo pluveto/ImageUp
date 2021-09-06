@@ -18,6 +18,7 @@ namespace ImageUpWpf.Core
         /// 用于上传的短文件名
         /// </summary>
         public string UploadFileName { get; set; }
+        public string Id { get; set; }
         public TaskGroup()
         {
             Items = new Dictionary<string, TaskItem>();
@@ -26,7 +27,7 @@ namespace ImageUpWpf.Core
         public void AddUploader(IUploader u)
         {
             var guid = Guid.NewGuid().ToString();
-            Items[guid] = new TaskItem { Uploader = u, Stream = this.Stream, Name = UploadFileName };
+            Items[guid] = new TaskItem { Id = guid, Uploader = u, Stream = this.Stream, Name = UploadFileName };
         }
 
         public IList<string> GetUrls()
@@ -97,7 +98,8 @@ namespace ImageUpWpf.Core
                 return this;
             }
             var ns = new NamingStep { NamingTemplate = NamingTemplate };
-            var g = new TaskGroup { Stream = info.OpenRead() ,UploadFileName = ns.Execute(fileName) };
+            var guid = Guid.NewGuid().ToString();
+            var g = new TaskGroup { Id = guid, Stream = info.OpenRead(), UploadFileName = ns.Execute(fileName) };
             foreach (var uploader in ChainUploaders)
             {
                 g.AddUploader(uploader);
@@ -109,7 +111,7 @@ namespace ImageUpWpf.Core
                 Message = null,
                 TaskGroup = g
             });
-            this.Groups.Add(Guid.NewGuid().ToString(), g);
+            this.Groups.Add(guid, g);
             return this;
         }
         public UploadTask AddFiles(string[] fileNames, EventHandler<TaskGroupCreatingResult> result)
@@ -126,6 +128,7 @@ namespace ImageUpWpf.Core
             logger.Info($"Start {this.Groups.Count} groups of tasks.");
             var tasks = this.Groups.Select(g => g.Value.Run()).ToArray();
             _ = await Task.WhenAll(tasks);
+            logger.Info($"Done all groups of tasks.");
             return this.Groups;
         }
     }
