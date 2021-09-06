@@ -31,16 +31,26 @@ namespace ImageUpWpf.Core
         public IUploader Uploader { get; set; }
 
         public TaskItemStatus Status { get; set; } = TaskItemStatus.Ready;
+        public string Id { get; set; }
 
         public delegate void StateTransitionEvent(StateTransitionEventArgs eventArgs);
         public event StateTransitionEvent AfterTransition;
 
+        public TaskItem()
+        {
+            AfterTransition += TaskItem_AfterTransition;
+        }
         private void Transition(TaskItemStatus nextStatus)
         {
             var old = Status;
-            Status = old;
+            Status = nextStatus;
             var eventArgs = new StateTransitionEventArgs { Cancelled = false, From = old, To = Status };
             AfterTransition?.Invoke(eventArgs);
+        }
+
+        private void TaskItem_AfterTransition(StateTransitionEventArgs a)
+        {
+            logger.Info($"Task status trans: {a.From}->{a.To}, of " + Id);
         }
 
         public async Task<string> Run()
@@ -50,6 +60,7 @@ namespace ImageUpWpf.Core
                 logger.Warn($"Unable to run: current status={Status}. Task = {this.Name}");
                 return null;
             }
+            logger.Info($"Start task id={Id} name={Name}");
             try
             {
                 using (var s = new MemoryStream())
@@ -67,15 +78,15 @@ namespace ImageUpWpf.Core
                 Message = e.Message;
                 return null;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                logger.Error("UploadException: " + e.Message);
+                logger.Error("Exception: " + e.Message);
                 Transition(TaskItemStatus.Error);
                 Message = e.Message;
                 return null;
             }
             Transition(TaskItemStatus.Completed);
-
+            logger.Info($"Done task id={Id} name={Name}");
             return Url;
         }
     }
