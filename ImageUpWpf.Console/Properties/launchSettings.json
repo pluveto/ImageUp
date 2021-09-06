@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ImageUpWpf.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\\\Users\\\\i\\\\AppData\\\\Local\\\\Temp/typora-icon2.png\" \"C:\\\\Users\\\\i\\\\AppData\\\\Local\\\\Temp/typora-icon.png\""
+    }
+  }
+}
