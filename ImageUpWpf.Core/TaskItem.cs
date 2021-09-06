@@ -10,6 +10,7 @@ namespace ImageUpWpf.Core
 
         public class StateTransitionEventArgs : EventArgs
         {
+            public TaskItem TaskItem { get; set; }
             public TaskItemStatus From { get; set; }
             public TaskItemStatus To { get; set; }
             public bool Cancelled { get; set; }
@@ -44,7 +45,7 @@ namespace ImageUpWpf.Core
         {
             var old = Status;
             Status = nextStatus;
-            var eventArgs = new StateTransitionEventArgs { Cancelled = false, From = old, To = Status };
+            var eventArgs = new StateTransitionEventArgs { Cancelled = false, From = old, To = Status, TaskItem = this };
             AfterTransition?.Invoke(eventArgs);
         }
 
