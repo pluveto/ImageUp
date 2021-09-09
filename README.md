@@ -75,6 +75,7 @@ Timeout: 10000
 
 ### ImageUpWpf
 提供用户界面封装
+<<<<<<< HEAD
 
 ## 插件开发
 
