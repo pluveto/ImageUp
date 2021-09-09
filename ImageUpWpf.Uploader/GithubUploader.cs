@@ -1,4 +1,8 @@
 ﻿using ImageUpWpf.Core;
+using ImageUpWpf.Core.App;
+using ImageUpWpf.Core.Plugin.Config;
+using ImageUpWpf.Core.Plugin.Interface;
+using ImageUpWpf.Core.Upload;
 using ImageUpWpf.Uploader.Properties;
 using Newtonsoft.Json;
 using NLog;
@@ -15,13 +19,13 @@ namespace ImageUpWpf.Uploader
 {
     public class GithubUploader : IPlugin, IUploader
     {
-        private GithubConfig config;
-        private Logger logger;
+        private GithubConfig config = new GithubConfig();
+        private Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly static SemaphoreSlim mutex = new SemaphoreSlim(1);
 
         public IuAppContext Context { get; set; }
 
-        public PluginInfo PluginInfo =>
+        public PluginInfo PluginInfo { get; set; } =
             new PluginInfo()
             {
                 MainClass = "GithubUploader",
@@ -29,14 +33,13 @@ namespace ImageUpWpf.Uploader
                 Type = PluginType.Uploader,
                 Icon = Resources.GithubIcon,
                 Author = "Pluveto",
-                Version = "0.0.1",
+                Version = "0.0.2",
             };
 
         IPluginConfig IPlugin.Config { get => config; set => config = (GithubConfig)value; }
 
         public GithubUploader()
         {
-            logger = NLog.LogManager.GetCurrentClassLogger();
             logger.Info("Plugin instanciated.");
         }
 
@@ -54,10 +57,10 @@ namespace ImageUpWpf.Uploader
 
         public async Task<string> Upload(Stream sr, string name)
         {
-            logger.Info("Prepare to upload" + name);
+            logger.Info("Prepare to upload " + name);
 
             HttpResponseMessage resp;
-            using (var client = new HttpClient(handler: GetProxyHandler()))
+            using (var client = new HttpClient(handler: Context.Helper.GetProxyHandler()))
             using (sr)
             {
                 client.Timeout = TimeSpan.FromMilliseconds(this.config.Timeout);
@@ -87,8 +90,8 @@ namespace ImageUpWpf.Uploader
                     mutex.Release();
                     logger.Info("Released mutex of " + name);
                 }
-                logger.Info("Status: " + resp.StatusCode);
-                logger.Info("Resp: " + await resp.Content.ReadAsStringAsync());
+                logger.Info($"Status Code: {resp.StatusCode}({(int)resp.StatusCode})");
+                logger.Info("Response Body: " + await resp.Content.ReadAsStringAsync());
             }
             if (resp.StatusCode == System.Net.HttpStatusCode.Created
                 || resp.StatusCode == System.Net.HttpStatusCode.OK)
@@ -121,7 +124,7 @@ namespace ImageUpWpf.Uploader
             request.Method = HttpMethod.Put;
             var json = buildRequestBody(name, sr);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            request.Headers.TryAddWithoutValidation("User-Agent", ".NET Github App");
+            request.Headers.TryAddWithoutValidation("User-Agent", Resources.UserAgent);
             request.Headers.TryAddWithoutValidation("Accept", "application/vnd.github.v3+json");
             request.Headers.TryAddWithoutValidation("Authorization", $"token {this.config.AccessToken}");
             return request;
@@ -141,29 +144,6 @@ namespace ImageUpWpf.Uploader
                 branch = branch,
             });
             return str;
-        }
-
-        private HttpMessageHandler GetProxyHandler()
-        {
-            if (default == Context || !Context.AppConfig.EnableProxy)
-            {
-                return new HttpClientHandler();
-            }
-            var proxyUrl = Context.AppConfig.Proxy;
-            logger.Info("Using proxy " + proxyUrl);
-            // First create a proxy object
-            var proxy = new System.Net.WebProxy
-            {
-                Address = new Uri(proxyUrl),
-                BypassProxyOnLocal = false
-            };
-
-            // Now create a client handler which uses that proxy
-            return new HttpClientHandler
-            {
-                Proxy = proxy,
-            };
-
         }
 
         //private string StreamToString(Stream stream)

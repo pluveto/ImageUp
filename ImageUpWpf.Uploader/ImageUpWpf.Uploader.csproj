@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(OutDir)$(TargetFileName) &quot;..\$(SolutionName)\$(OutDir)\plugins&quot;&#xD;&#xA;copy $(OutDir)$(TargetFileName) &quot;..\$(SolutionName).Console\$(OutDir)\plugins&quot;" />
+    <Exec Command="set from=$(OutDir)$(TargetFileName)&#xD;&#xA;set gui_plugin=&quot;..\$(SolutionName)\$(OutDir)\plugins&quot;&#xD;&#xA;set cli_plugin=&quot;..\$(SolutionName).Console\$(OutDir)\plugins&quot;&#xD;&#xA;call script/post-build.bat" />
   </Target>
 
 </Project>
