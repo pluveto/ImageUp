@@ -181,6 +181,25 @@ mutex.Release();
 
 **请勿使用 Mutex，Lock 语句等进行加锁，它们与 async/await 不相容。**
 
+### 编译和测试
+
+你需要编译为 dll 文件，并且放到 `plugins` 文件夹，并通过 `app_config` 开启。建议通过后编译脚本自动化操作：
+
+```bat
+set from=$(OutDir)$(TargetFileName)
+set gui_plugin="..\$(SolutionName)\$(OutDir)\plugins"
+set cli_plugin="..\$(SolutionName).Console\$(OutDir)\plugins"
+call script/post-build.bat
+```
+
+`script/post-build.bat`:
+
+```bat
+copy %from% %gui_plugin%
+copy %from% %cli_plugin%
+```
+
+
 ### 参考代码
 
 ```cs
