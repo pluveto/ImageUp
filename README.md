@@ -4,9 +4,9 @@
 
 ## 特性
 
-[x] 小体积、低占用。（再也不用为了上传个图片就跑起整个浏览器内核）
-[x] 支持命令行调用，兼容 Typora。
-[ ] 界面美观，采用和 OS 一致的 WinUI 风格。
++ [x] 小体积、低占用。（再也不用为了上传个图片就跑起整个浏览器内核）
++ [x] 支持命令行调用，兼容 Typora。
++ [ ] 界面美观，采用和 OS 一致的 WinUI 风格。
 
 ### 使用方法
 
@@ -64,20 +64,18 @@ Timeout: 10000
 
 ![image-20210909154242166](https://i.loli.net/2021/09/09/jo1kexdGpJucX3t.png)
 
-## 模块说明
+## 插件开发
 
+### 模块说明
 
-### ImageUpWpf.Core
+#### ImageUpWpf.Core
 提供核心功能
 
-### ImageUpWpf.Uploader
+#### ImageUpWpf.Uploader
 提供基础的上传插件
 
-### ImageUpWpf
+#### ImageUpWpf
 提供用户界面封装
-<<<<<<< HEAD
-
-## 插件开发
 
 请遵照 Core 中的几个接口进行开发。下面是一个例子。
 
@@ -100,14 +98,17 @@ Timeout: 10000
         };
 ```
 
-| 成员    | 说明                                                       |
-|---------|------------------------------------------------------------|
-| Name    | 插件的展示名称                                             |
-| Type    | 插件的类型                                                 |
-| Icon    | 插件图标的 Base64 值，大小为 16x16                         |
-| Author  | 作者姓名                                                   |
-| Repo    | Git 仓库地址，包含协议头                                   |
-| Version | 版本，必须和仓库 Release 的 Tag 名称一致，以便以后进行更新 |
+> 此处可以设置为 private set，但这样你需要手动填写 MainClass 属性
+
+| 属性      | 说明                                                       |
+|-----------|------------------------------------------------------------|
+| MainClass | 插件类名，和配置文件名称相关，程序会通过反射自动填写                     |
+| Name      | 插件的展示名称                                             |
+| Type      | 插件的类型                                                 |
+| Icon      | 插件图标的 Base64 值，大小为 16x16                         |
+| Author    | 作者姓名                                                   |
+| Repo      | Git 仓库地址，包含协议头                                   |
+| Version   | 版本，必须和仓库 Release 的 Tag 名称一致，以便以后进行更新 |
 
 ### 配置文件
 
@@ -118,6 +119,26 @@ Timeout: 10000
         private SmmsConfig config = new SmmsConfig();
         IPluginConfig IPlugin.Config { get => config; set => config = (SmmsConfig)value; }
 ```
+
+你的配置文件类应该实现 IPluginConfig 接口，内容参考：
+
+```cs
+    public class SmmsConfig : IPluginConfig
+    {
+        internal string BaseUrl { get; set; } = "https://sm.ms/api/v2";
+        public string Token { get; set; }
+        public double Timeout { get; set; } = 60*1000;
+
+        public IDictionary<string, ConfigItemMeta> ConfigFormMeta => new Dictionary<string, ConfigItemMeta>() {
+            {"Token",       new ConfigItemMeta{ Type = ConfigItemType.String,      DisplayName="Token" , Description = "Get it from https://sm.ms/home/"} },
+            {"Timeout",     new ConfigItemMeta{ Type = ConfigItemType.Integer,     DisplayName="Timeout in ms" , DefaultValue = "10000" } },
+        };
+
+    }
+```
+
+`ConfigFormMeta` 需要认真填写，将基于它生成用户可编辑的 GUI。
+
 
 如果插件需要一些高级功能，则可以定义 `public IuAppContext Context { get; set; }` 属性，这样 PluginManager 会向你的插件注入一个 IuAppContext 实例。通过这个上下文实例可以操纵应用，实现更复杂的功能。同时，此实例提供帮助函数，比如 `Context.Helper.GetProxyHandler()` 可以获取一个 ProxyHandler给你的插件中的 HttpClient 使用。
 
