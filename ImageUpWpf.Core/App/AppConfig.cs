@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ImageUpWpf.Core
+namespace ImageUpWpf.Core.App
 {
     public class AppConfig
     {
@@ -12,11 +12,12 @@ namespace ImageUpWpf.Core
         public string Proxy { get; set; }
         public static AppConfig Default()
         {
-            return new AppConfig { 
+            return new AppConfig
+            {
                 ChainUploaders = new List<string> { "GithubUploader" },
                 NamingTemplate = "{fileName}",
                 EnableProxy = false
             };
-        }
+        }        
     }
 }

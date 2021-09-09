@@ -1,8 +1,9 @@
-﻿using System;
+﻿using ImageUpWpf.Core.Plugin.Interface;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace ImageUpWpf.Core
+namespace ImageUpWpf.Core.Upload
 {
     public class TaskItem
     {
@@ -68,6 +69,7 @@ namespace ImageUpWpf.Core
                 {
                     Stream.CopyTo(s);
                     Transition(TaskItemStatus.Uploading);
+                    s.Position = 0;
                     Url = await Uploader.Upload(s, Name);
                 }
             }

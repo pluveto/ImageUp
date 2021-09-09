@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace ImageUpWpf.Core
+namespace ImageUpWpf.Core.Upload
 {
     public class NamingStep
     {

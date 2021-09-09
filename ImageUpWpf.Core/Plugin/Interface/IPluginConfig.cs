@@ -1,7 +1,8 @@
-﻿using System;
+﻿using ImageUpWpf.Core.Plugin.Config;
+using System;
 using System.Collections.Generic;
 
-namespace ImageUpWpf.Core
+namespace ImageUpWpf.Core.Plugin.Interface
 {
 
     public interface IPluginConfig

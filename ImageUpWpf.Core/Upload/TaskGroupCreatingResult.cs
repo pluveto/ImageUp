@@ -1,4 +1,4 @@
-﻿namespace ImageUpWpf.Core
+﻿namespace ImageUpWpf.Core.Upload
 {
     public class TaskGroupCreatingResult
     {

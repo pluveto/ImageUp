@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ImageUpWpf.Core
+namespace ImageUpWpf.Core.Upload
 {
     public class UploadException : Exception
     {

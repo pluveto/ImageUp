@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ImageUpWpf.Core
+namespace ImageUpWpf.Core.Plugin.Interface
 {
     public interface IUploader
     {
@@ -14,8 +14,8 @@ namespace ImageUpWpf.Core
 
     public interface IPlugin
     {
-        PluginInfo PluginInfo { get; }
-        IPluginConfig Config{ get; set; }
+        PluginInfo PluginInfo { get; set; }
+        IPluginConfig Config { get; set; }
     }
 
     public class PluginInfo
@@ -39,7 +39,8 @@ namespace ImageUpWpf.Core
         {
             this.type = type;
         }
-        public new string ToString() {
+        public new string ToString()
+        {
             return this.type;
         }
 

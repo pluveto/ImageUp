@@ -1,12 +1,15 @@
-﻿using NLog;
+﻿using ImageUpWpf.Core.Plugin.Interface;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ImageUpWpf.Core
+namespace ImageUpWpf.Core.Upload
 {
+    public delegate void TaskGroupUploadingEvent();
+
     public class TaskGroup
     {
         public Stream Stream { get; set; }
@@ -128,7 +131,7 @@ namespace ImageUpWpf.Core
             logger.Info($"Start {this.Groups.Count} groups of tasks.");
             var tasks = this.Groups.Select(g => g.Value.Run()).ToArray();
             _ = await Task.WhenAll(tasks);
-            logger.Info($"Done all groups of tasks.");
+            logger.Info($"Done all groups of tasks.\n");
             return this.Groups;
         }
     }

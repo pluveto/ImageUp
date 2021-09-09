@@ -1,4 +1,4 @@
-﻿namespace ImageUpWpf.Core
+﻿namespace ImageUpWpf.Core.Plugin.Config
 {
     public class ConfigItemMeta
     {
