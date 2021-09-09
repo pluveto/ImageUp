@@ -1,4 +1,7 @@
 ﻿using ImageUpWpf.Core;
+using ImageUpWpf.Core.App;
+using ImageUpWpf.Core.Plugin;
+using ImageUpWpf.Core.Upload;
 using NLog;
 using System;
 using System.Diagnostics;
@@ -9,12 +12,13 @@ namespace ImageUpWpf.Console
     class Program
     {
         private static Logger logger;
+        private static IuAppContext context;
 
         static void Main(string[] args)
         {
             logger = NLog.LogManager.GetCurrentClassLogger();
             logger.Trace("App startup");
-            var context = CreateContext();
+            context = CreateContext();
             logger.Trace("Context created");
 
             try
@@ -47,8 +51,17 @@ namespace ImageUpWpf.Console
         private static IuAppContext CreateContext()
         {
             var context = new IuAppContext();
+            context.OnPluginLoadError += Context_OnPluginLoadError;
             context.Init();
             return context;
+        }
+
+        private static void Context_OnPluginLoadError(PluginLoadErrorType errorType, string message)
+        {
+            if(errorType == PluginLoadErrorType.NotFound)
+            {
+                System.Console.WriteLine("Warning: " + message);
+            }
         }
 
         private static void AddFileCallback(object sender, TaskGroupCreatingResult e)

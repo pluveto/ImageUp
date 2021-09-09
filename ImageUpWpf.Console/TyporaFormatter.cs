@@ -1,4 +1,5 @@
 ﻿using ImageUpWpf.Core;
+using ImageUpWpf.Core.Upload;
 using System;
 using System.Collections.Generic;
 using System.Linq;

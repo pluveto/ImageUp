@@ -1,6 +1,6 @@
 chainUploaders:
   # - GithubUploader
-  - DDD
+  - SmmsUploader
 namingTemplate: "{year}/{month}/{fileNameNoExt}_{ts}{ext}"
 enableProxy: true
 # proxy: 'http://127.0.0.1:7890'
