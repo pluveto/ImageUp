@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 namespace ImageUpWpf
 {
     /// <summary>
-    /// MessageWindow.xaml 的交互逻辑
+    /// 消息窗口。请通过下面的静态方法 Show 使用。
     /// </summary>
     public partial class MessageWindow : Window
     {

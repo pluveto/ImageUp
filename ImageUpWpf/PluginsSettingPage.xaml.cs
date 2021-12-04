@@ -1,4 +1,6 @@
 ﻿using ImageUpWpf.Core;
+using ImageUpWpf.Core.Plugin.Config;
+using ImageUpWpf.Core.Plugin.Interface;
 using ModernWpf.Controls.Primitives;
 using System;
 using System.Collections.Generic;
