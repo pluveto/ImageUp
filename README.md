@@ -6,7 +6,13 @@
 
 + [x] 小体积、低占用。（再也不用为了上传个图片就跑起整个浏览器内核）
 + [x] 支持命令行调用，兼容 Typora。
-+ [ ] 界面美观，采用和 OS 一致的 WinUI 风格。
++ [x] 界面美观，采用和 OS 一致的 WinUI 风格。
++ [x] 本地图片上传。支持 PNG/JPG/JPEG/SVG 等各种格式。
++ [x] 自定义插件扩展。
++ [ ] 剪贴板图像上传。
++ [x] 上传后复制 Markdown 到剪贴板。
++ [ ] 失败自动重试。
++ [x] 并行上传。
 
 ### 使用方法
 
@@ -18,7 +24,6 @@
 chainUploaders:
   # 上传使用的插件，可以是多个，这样会全部上传，以作备份
   - GithubUploader
-
   # - SmmsUploader
 
 # 命名模板（并非所有图床都支持）
@@ -35,6 +40,7 @@ proxy: 'http://127.0.0.1:7890'
 
 ```yaml
 # Github 的访问令牌
+# 在 https://github.com/settings/tokens 创建
 accessToken: '*******************'
 
 # 仓库
