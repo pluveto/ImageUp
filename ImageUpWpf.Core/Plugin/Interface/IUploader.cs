@@ -9,7 +9,7 @@ namespace ImageUpWpf.Core.Plugin.Interface
     public interface IUploader
     {
         Task<string> Upload(Stream sr, string name);
-
+        string GetName();
     }
 
     public interface IPlugin

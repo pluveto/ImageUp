@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageUpWpf", "ImageUpWpf\ImageUpWpf.csproj", "{9C68D8B7-30CB-42F1-832D-6EA640329747}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BD116219-34EF-44BC-8CFD-3635DC655520} = {BD116219-34EF-44BC-8CFD-3635DC655520}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageUpWpf.Uploader", "ImageUpWpf.Uploader\ImageUpWpf.Uploader.csproj", "{BD116219-34EF-44BC-8CFD-3635DC655520}"
 EndProject
@@ -15,7 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageUpWpf.Console", "ImageUpWpf.Console\ImageUpWpf.Console.csproj", "{97D6BB3C-F836-4A47-8FC4-3AC65F543E97}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageUpWpf.Console", "ImageUpWpf.Console\ImageUpWpf.Console.csproj", "{97D6BB3C-F836-4A47-8FC4-3AC65F543E97}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

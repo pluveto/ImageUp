@@ -25,6 +25,9 @@ namespace ImageUpWpf.Core
             public const long PB = 1024 * TB;
             public const long EB = 1024 * PB;
 
+            /// <summary>
+            /// 生成易理解的文件大小字符串
+            /// </summary>
             public static string ReadableSize(long byteSize)
             {
                 string[] suf = { "B", "KB", "MB", "GB", "TB", "PB", "EB" }; //Longs run out around EB
@@ -41,9 +44,17 @@ namespace ImageUpWpf.Core
         {
 
 #pragma warning disable IDE0051 // 此函数已经通过反射调用，调用者 LoadConfig
+            /// <summary>
+            /// 自动匹配多种配置文件格式，将其反序列化为目标对象
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="dir">配置文件目录</param>
+            /// <param name="baseName">配置文件名（不需要扩展名）</param>
+            /// <returns></returns>
             public static T GetConfig<T>(string dir, string baseName)
 #pragma warning restore IDE0051
             {
+                
                 var (cfgPath, ext) = TryGetFileWithExtIn(dir, baseName, new string[] { "yaml", "yml", "json" });
                 if (cfgPath == default)
                 {

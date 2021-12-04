@@ -5,6 +5,11 @@ using System.Threading.Tasks;
 
 namespace ImageUpWpf.Core.Upload
 {
+    /// <summary>
+    /// 描述单个上传任务的状态。
+    /// 每个 TaskItem 可以被一个插件所上传。
+    /// 每个 TaskItem 上传的对象可以是文件或者其它，取决于使用者。对它而言只负责上传流
+    /// </summary>
     public class TaskItem
     {
         private NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -22,14 +27,26 @@ namespace ImageUpWpf.Core.Upload
         {
             return Message != string.Empty;
         }
-
+        /// <summary>
+        /// 流在对象创建时被给出
+        /// </summary>
         public Stream Stream { get; set; }
 
-        // Name for upload
+        /// <summary>
+        /// 通常是上传的文件名
+        /// </summary>
         public string Name { get; set; }
+        /// <summary>
+        /// 若发生错误，此字符串将是错误消息
+        /// </summary>
         public string Message { get; set; }
+        /// <summary>
+        /// 上传成功后的 Url
+        /// </summary>
         public string Url { get; set; }
-
+        /// <summary>
+        /// 负责上传本 TaskItem 的插件
+        /// </summary>
         public IUploader Uploader { get; set; }
 
         public TaskItemStatus Status { get; set; } = TaskItemStatus.Ready;
@@ -42,7 +59,11 @@ namespace ImageUpWpf.Core.Upload
         {
             AfterTransition += TaskItem_AfterTransition;
         }
-        private void Transition(TaskItemStatus nextStatus)
+        /// <summary>
+        /// 报告状态转移情况，以便各个监听器能够得知
+        /// </summary>
+        /// <param name="nextStatus"></param>
+        private void ReportTransition(TaskItemStatus nextStatus)
         {
             var old = Status;
             Status = nextStatus;
@@ -68,15 +89,16 @@ namespace ImageUpWpf.Core.Upload
                 using (var s = new MemoryStream())
                 {
                     Stream.CopyTo(s);
-                    Transition(TaskItemStatus.Uploading);
+                    ReportTransition(TaskItemStatus.Uploading);
                     s.Position = 0;
+                    // 本函数的核心代码就是完成上传
                     Url = await Uploader.Upload(s, Name);
                 }
             }
             catch (UploadException e)
             {
                 logger.Error("UploadException: " + e.Message);
-                Transition(TaskItemStatus.Error);
+                ReportTransition(TaskItemStatus.Error);
                 Status = TaskItemStatus.Error;
                 Message = e.Message;
                 return null;
@@ -84,11 +106,11 @@ namespace ImageUpWpf.Core.Upload
             catch (Exception e)
             {
                 logger.Error("Exception: " + e.Message);
-                Transition(TaskItemStatus.Error);
+                ReportTransition(TaskItemStatus.Error);
                 Message = e.Message;
                 return null;
             }
-            Transition(TaskItemStatus.Completed);
+            ReportTransition(TaskItemStatus.Completed);
             logger.Info($"Done task id={Id} name={Name}");
             return Url;
         }

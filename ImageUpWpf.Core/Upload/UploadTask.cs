@@ -9,48 +9,10 @@ using System.Threading.Tasks;
 namespace ImageUpWpf.Core.Upload
 {
     public delegate void TaskGroupUploadingEvent();
-
-    public class TaskGroup
-    {
-        public Stream Stream { get; set; }
-        /// <summary>
-        /// key: GUID
-        /// </summary>
-        private Dictionary<string, TaskItem> Items { get; }
-        /// <summary>
-        /// 用于上传的短文件名
-        /// </summary>
-        public string UploadFileName { get; set; }
-        public string Id { get; set; }
-        public TaskGroup()
-        {
-            Items = new Dictionary<string, TaskItem>();
-        }
-
-        public void AddUploader(IUploader u)
-        {
-            var guid = Guid.NewGuid().ToString();
-            Items[guid] = new TaskItem { Id = guid, Uploader = u, Stream = this.Stream, Name = UploadFileName };
-        }
-
-        public IList<string> GetUrls()
-        {
-            return Items.Where(x => x.Value.Url.Length > 0).Select(x => x.Value.Url).ToList();
-        }
-
-        public string GetUrl()
-        {
-            return Items.Where(x => !string.IsNullOrEmpty(x.Value.Url)).Select(x => x.Value.Url).FirstOrDefault();
-        }
-
-        public async Task<Dictionary<string, TaskItem>> Run()
-        {
-            var tasks = Items.Select(i => i.Value.Run()).ToArray();
-            await Task.WhenAll(tasks);
-            return Items;
-        }
-    }
-
+   
+    /// <summary>
+    /// 对于每个文件，将产生一个任务组 TaskGroup 。任务组中有一些 TaskItem，每个 TaskItem 都将被各个插件上传。
+    /// </summary>
     public class UploadTask
     {
         private Logger logger;
@@ -58,7 +20,7 @@ namespace ImageUpWpf.Core.Upload
         /// <summary>
         /// key: GUID
         /// </summary>
-        private Dictionary<string, TaskGroup> Groups { get; set; } = new Dictionary<string, TaskGroup>();
+        public Dictionary<string, TaskGroup> Groups { get; private set; } = new Dictionary<string, TaskGroup>();
         public IList<IUploader> ChainUploaders { get; set; } = new List<IUploader>();
         public ChainUploadMode UploadMode { get; set; } = ChainUploadMode.Parallel;
         public string NamingTemplate { get; set; }
@@ -126,6 +88,10 @@ namespace ImageUpWpf.Core.Upload
             }
             return this;
         }
+        /// <summary>
+        /// 返回任务组列表。key 为任务组的 GUID
+        /// </summary>
+        /// <returns></returns>
         public async Task<Dictionary<string, TaskGroup>> Run()
         {
             logger.Info($"Start {this.Groups.Count} groups of tasks.");
