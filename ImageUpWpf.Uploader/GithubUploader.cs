@@ -43,6 +43,7 @@ namespace ImageUpWpf.Uploader
             logger.Info("Plugin instanciated.");
         }
 
+        public string GetName() => this.PluginInfo.Name;
 
         static string StreamToBase64(Stream s)
         {
@@ -111,8 +112,11 @@ namespace ImageUpWpf.Uploader
             {
                 throw new UploadException("Conflict, Maybe operating too quick.");
             }
-
-            return null;
+            if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UploadException("Unauthorized.");
+            }
+            throw new UploadException("Unknow error.");
         }
 
         private HttpRequestMessage buildRequest(Stream sr, string name)

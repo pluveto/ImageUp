@@ -32,6 +32,7 @@ namespace ImageUpWpf.Uploader
         };
 
         IPluginConfig IPlugin.Config { get => config; set => config = (SmmsConfig)value; }
+        public string GetName() => this.PluginInfo.Name;
 
         public async Task<string> Upload(Stream sr, string name)
         {
