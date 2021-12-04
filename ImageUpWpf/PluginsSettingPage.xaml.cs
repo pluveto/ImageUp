@@ -38,38 +38,37 @@ namespace ImageUpWpf
     public class PluginsSettingPageVM
     {
 
-        public ObservableCollection<PluginSettingTabItemData> TabData { get; }
+        public ObservableCollection<PluginSettingTabItem> TabData { get; }
 
         public PluginsSettingPageVM()
         {
-            this.TabData = new ObservableCollection<PluginSettingTabItemData>();
+            this.TabData = new ObservableCollection<PluginSettingTabItem>();
             var plugins = (Application.Current as App).AppContext.PluginManager.Plugins;
             foreach (var plugin in plugins)
             {
-                this.TabData.Add(new PluginSettingTabItemData(plugin));
+                this.TabData.Add(new PluginSettingTabItem(plugin));
             }
             Debug.WriteLine($"{this.TabData.Count} plugins loaded");
         }
 
     }
 
-    public class PluginSettingTabItemData : TabItem, INotifyPropertyChanged
+    public class PluginSettingTabItem : TabItem, INotifyPropertyChanged
     {
-        public PluginSettingTabItemData(IPlugin plugin)
+        public PluginSettingTabItem(IPlugin plugin)
         {
             Plugin = plugin;
-            this.Header = buildHeaderUI();
+            this.Header = buildHeaderUI();            
             SettingUI = buildSettingUI();
-            this.Content = SettingUI;
+            this.Content = SettingUI;            
         }
 
-        private object buildHeaderUI()
+        private string buildHeaderUI()
         {
-            var panel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
-            panel.Children.Add(new Image() { Source = base64ToImage(Plugin.PluginInfo.Icon), Width = 16, Height = 16, Margin = new Thickness(0,0,2,0) });
+            var img = new Image() { Source = base64ToImage(Plugin.PluginInfo.Icon), Width = 16, Height = 16, Margin = new Thickness(0, 0, 2, 0) };
+            TabItemHelper.SetIcon(this, img);
             var headerText = Plugin.PluginInfo.Name;
-            panel.Children.Add(new TextBlock { Text = headerText });
-            return panel;
+            return headerText;
 
         }
 
@@ -86,7 +85,6 @@ namespace ImageUpWpf
         private FrameworkElement buildSettingUI()
         {
             var panel = new StackPanel { Margin = new Thickness(10) };
-
             foreach (var (k, v) in this.Plugin.Config.ConfigFormMeta)
             {
                 if (v.Type == ConfigItemType.String)
