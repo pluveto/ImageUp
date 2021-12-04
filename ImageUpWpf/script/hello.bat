@@ -1,1 +1,1 @@
-echo fuckyou
+echo anti996
