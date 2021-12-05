@@ -45,7 +45,7 @@ namespace ImageUpWpf.Core.Upload
             }
             return this;
         }
-        public UploadTask AddFile(string fileName, EventHandler<TaskGroupCreatingResult> result)
+        public UploadTask AddFile(string fileName, EventHandler<TaskGroupCreatingResult> result, bool baseNameMode = true)
         {
             logger.Info("Add " + fileName);
             var info = new System.IO.FileInfo(fileName);
@@ -64,7 +64,16 @@ namespace ImageUpWpf.Core.Upload
             }
             var ns = new NamingStep { NamingTemplate = NamingTemplate };
             var guid = Guid.NewGuid().ToString();
-            var g = new TaskGroup { Id = guid, Stream = info.OpenRead(), UploadFileName = ns.Execute(fileName) };
+            string uploadName;
+            if (baseNameMode)
+            {
+                uploadName = ns.Execute(Path.GetFileName(fileName));
+            }
+            else
+            {
+                uploadName = ns.Execute(fileName);
+            }
+            var g = new TaskGroup { Id = guid, Stream = info.OpenRead(), UploadFileName = uploadName };
             foreach (var uploader in ChainUploaders)
             {
                 g.AddUploader(uploader);

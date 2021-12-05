@@ -26,35 +26,67 @@ namespace ImageUpWpf
     /// </summary>
     public partial class MainWindow : Window
     {
+
+        // 允许上传的类型
+        private static string[] AllowedType = new string[] { "jpg", "jiff", "jpeg", "bmp", "svg", "gif", "png", "webp" };
+        // 临时文件的前缀
+        private string TmpPrefix = "image_up_";
         public MainWindow()
         {
             InitializeComponent();
             // Listen to notification activation
             ToastNotificationManagerCompat.OnActivated += OnToastActivated;
             HotkeyManager.Current.AddOrReplace("Upload Clipbard", Key.F11, ModifierKeys.Control, HandleUploadClipboard);
+            ClearTmpFiles();
+        }
 
+        private void ClearTmpFiles()
+        {
+            var dir = new System.IO.DirectoryInfo(System.IO.Path.GetTempPath());
+
+            foreach (var file in dir.EnumerateFiles(TmpPrefix + "*"))
+            {
+                file.Delete();
+            }
         }
 
         private async void HandleUploadClipboard(object sender, HotkeyEventArgs e)
         {
-            BitmapSource src = System.Windows.Clipboard.GetImage();
+            var paths = new List<string>();
+            BitmapSource src = Clipboard.GetImage();
             if(src == default)
             {
-                new ToastContentBuilder()
-                .AddText("未上传")
-                .AddText($"剪贴板中没有图片。")
-                .Show();
-                return;
+                // 若剪贴板无图片，则上传剪贴板的图片文件
+                foreach (var item in Clipboard.GetFileDropList())
+                {
+                    if (IsPathValidImage(item))
+                    {
+                        paths.Add(item);
+                    }
+                }
+                // 若是剪贴板也没有有效的图片文件，则说明无需上传
+                if (paths.Count == 0)
+                {
+
+                    new ToastContentBuilder()
+                        .AddText("未上传")
+                        .AddText("剪贴板中没有图片。")
+                        .Show();
+                    return;
+                }
             }
-            var path = new string[]{
-                 System.IO.Path.GetTempPath() +"image_up_"
-                 + Util.TimeUtil.Timestamp() + Guid.NewGuid().ToString().Substring(0,8) + ".jpg"
-                };
-            using (var stream = Util.FileUtil.BitmapToJpegStream(src))
+            if(paths.Count == 0)
             {
-                Util.FileUtil.SaveStream(path[0], stream);
+                paths.Add(
+                     System.IO.Path.GetTempPath() + TmpPrefix
+                     + Util.TimeUtil.Timestamp() + Guid.NewGuid().ToString().Substring(0, 8) + ".jpg"
+                );
+                using (var stream = Util.FileUtil.BitmapToJpegStream(src))
+                {
+                    Util.FileUtil.SaveStream(paths[0], stream);
+                }
             }
-            await handleUploadImages(path);
+            await handleUploadImages(paths.ToArray());
         }
         private void OnToastActivated(ToastNotificationActivatedEventArgsCompat toastArgs)
         {
@@ -145,10 +177,27 @@ namespace ImageUpWpf
             
         }
 
+        private static bool IsPathValidImage(string path)
+        {
+            return AllowedType.Any(type => path.EndsWith("." + type));
+        }
+        private string GetFilter()
+        {
+            var s = "";
+            for (int i = 0; i < AllowedType.Length; i++)
+            {
+                s += "*." + AllowedType[i];
+                if (i != AllowedType.Length)
+                {
+                    s += ";";
+                }
+            }
+            return s;
+        }
         private IList<string> createOpenFileDialog()
         {
             var o = new OpenFileDialog();
-            o.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.svg|" +
+            o.Filter = "Image Files|"+ GetFilter() + "|" +
                 "All files|*.*";
             var ret = o.ShowDialog();
             if (ret != true)
