@@ -1,6 +1,8 @@
 ﻿using ImageUpWpf.Core.Upload;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Microsoft.Win32;
+using NHotkey;
+using NHotkey.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,8 +31,31 @@ namespace ImageUpWpf
             InitializeComponent();
             // Listen to notification activation
             ToastNotificationManagerCompat.OnActivated += OnToastActivated;
+            HotkeyManager.Current.AddOrReplace("Upload Clipbard", Key.F11, ModifierKeys.Control, HandleUploadClipboard);
+
         }
 
+        private async void HandleUploadClipboard(object sender, HotkeyEventArgs e)
+        {
+            BitmapSource src = System.Windows.Clipboard.GetImage();
+            if(src == default)
+            {
+                new ToastContentBuilder()
+                .AddText("未上传")
+                .AddText($"剪贴板中没有图片。")
+                .Show();
+                return;
+            }
+            var path = new string[]{
+                 System.IO.Path.GetTempPath() +"image_up_"
+                 + Util.TimeUtil.Timestamp() + Guid.NewGuid().ToString().Substring(0,8) + ".jpg"
+                };
+            using (var stream = Util.FileUtil.BitmapToJpegStream(src))
+            {
+                Util.FileUtil.SaveStream(path[0], stream);
+            }
+            await handleUploadImages(path);
+        }
         private void OnToastActivated(ToastNotificationActivatedEventArgsCompat toastArgs)
         {
             // Obtain the arguments from the notification
@@ -43,22 +68,22 @@ namespace ImageUpWpf
             Application.Current.Dispatcher.Invoke(delegate
             {
                 // TODO: Show the corresponding content
-                MessageBox.Show("Toast activated. Args: " + toastArgs.Argument);
+                // MessageBox.Show("Toast activated. Args: " + toastArgs.Argument);
             });
         }
 
-        private void uploadButton_Click(object sender, RoutedEventArgs e)
+        private async void uploadButton_Click(object sender, RoutedEventArgs e)
         {
             var path = createOpenFileDialog();
             if (default == path || path.Count == 0)
             {
                 return;
             }
-            handleUploadImages(path.ToArray());
+            await handleUploadImages(path.ToArray());
 
         }
 
-        private async void handleUploadImages(string[] path)
+        private async Task handleUploadImages(string[] path)
         {
             var context = ((App)Application.Current).AppContext;
             var task = new UploadTask
@@ -72,12 +97,14 @@ namespace ImageUpWpf
             var ret = await task.Run();            
             var clipboardCache = new StringBuilder();
             // 每个 Group 对应一个文件
+            var failCounter = 0;
             foreach (var (groupId, group) in ret)
             {
                 var url = group.GetUrl();
                 if(url == default)
                 {
                     OnGroupFailed(group);
+                    failCounter++;
                     continue;
                 }
                 // TODO：支持更丰富的剪贴板格式选项
@@ -85,6 +112,10 @@ namespace ImageUpWpf
                 clipboardCache.AppendLine($"![{group.UploadFileName}]({url})");
             }
             Clipboard.SetText(clipboardCache.ToString());
+            new ToastContentBuilder()
+            .AddText("上传结束")
+            .AddText($"共 {ret.Count} 个文件，其中失败 {failCounter} 个")
+            .Show();
         }
 
         private void OnGroupFailed(TaskGroup group)
