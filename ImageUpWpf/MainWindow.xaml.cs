@@ -38,6 +38,24 @@ namespace ImageUpWpf
             ToastNotificationManagerCompat.OnActivated += OnToastActivated;
             HotkeyManager.Current.AddOrReplace("Upload Clipbard", Key.F11, ModifierKeys.Control, HandleUploadClipboard);
             ClearTmpFiles();
+            SetIcon();
+        }
+        private void SetIcon()
+        {
+            var uiSettings = new Windows.UI.ViewManagement.UISettings();
+            var color = uiSettings.GetColorValue(
+                                    Windows.UI.ViewManagement.UIColorType.Background
+                                   );
+            var iconPath = "icon.ico";
+            if(color == Windows.UI.Colors.Black)
+            {
+                iconPath = "icon_dark.ico";
+            }
+            var asm = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+            var iconStream = Application.GetResourceStream(
+                new Uri($"pack://application:,,,/{asm};component/{iconPath}"
+                )).Stream;
+            this.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(iconStream);
         }
 
         private void ClearTmpFiles()
